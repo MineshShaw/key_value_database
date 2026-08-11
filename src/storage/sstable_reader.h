@@ -10,7 +10,7 @@
 
 class SSTableReader {
 public:
-    SSTableReader(const std::string& filepath) : file_(filepath, std::ios::binary) {
+    SSTableReader(const std::string& filepath) : file_(filepath, std::ios::binary), filepath_(filepath) {
         if (!file_.is_open()) throw std::runtime_error("Cannot open SSTable: " + filepath);
         
         // 1. Read Footer
@@ -90,8 +90,11 @@ public:
         return false;
     }
 
+    const std::string& filepath() const { return filepath_; }
+
 private:
     std::ifstream file_;
     std::unique_ptr<BloomFilter> bloom_filter_;
     std::vector<IndexEntry> index_;
+    std::string filepath_;
 };
