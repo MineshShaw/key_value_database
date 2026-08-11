@@ -26,3 +26,8 @@ target_link_libraries(test_spsc_queue gtest_main)
 
 include(GoogleTest)
 gtest_discover_tests(test_spsc_queue)
+
+# --- 4. MemTable Test Binary ---
+add_executable(test_memtable tests/test_memtable.cpp)
+target_link_libraries(test_memtable gtest_main)
+gtest_discover_tests(test_memtable)
