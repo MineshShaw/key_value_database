@@ -4,22 +4,9 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
-#include <stdexcept>
 
 // Standard cache line size for modern x86_64 to prevent false sharing
 constexpr size_t CACHE_LINE_SIZE = 64;
-
-enum class CommandType : uint8_t { GET, PUT, DEL };
-
-struct alignas(8) Command {
-    CommandType type;
-    uint32_t key_len;
-    uint32_t val_len;
-    uint64_t client_id;     // To route the ACK back to the correct worker/connection
-    uint64_t request_id;    // For client-side matching
-    char key[64];          
-    char value[256];        
-};
 
 template <typename T, size_t Capacity>
 class SPSCRingBuffer {
@@ -49,7 +36,6 @@ public:
             return false;
 
         item = buffer_[current_head];
-
         head_.store((current_head + 1) & (Capacity - 1), std::memory_order_release);
         return true;
     }
@@ -67,6 +53,6 @@ public:
 private:
     alignas(CACHE_LINE_SIZE) std::atomic<size_t> head_;
     alignas(CACHE_LINE_SIZE) std::atomic<size_t> tail_;
-    
+
     alignas(CACHE_LINE_SIZE) std::array<T, Capacity> buffer_;
 };
