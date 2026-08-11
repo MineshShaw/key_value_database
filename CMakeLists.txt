@@ -31,3 +31,8 @@ gtest_discover_tests(test_spsc_queue)
 add_executable(test_memtable tests/test_memtable.cpp)
 target_link_libraries(test_memtable gtest_main)
 gtest_discover_tests(test_memtable)
+
+# --- 5. SSTable Test Binary ---
+add_executable(test_sstable tests/test_sstable.cpp)
+target_link_libraries(test_sstable gtest_main)
+gtest_discover_tests(test_sstable)

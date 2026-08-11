@@ -17,8 +17,9 @@ struct SkipListNode {
 
     SkipListNode(const std::string& k, const std::string& v, int level)
         : key(k), value(v), forward(level) {
-        for (int i = 0; i < level; ++i)
+        for (int i = 0; i < level; ++i) {
             forward[i].store(nullptr, std::memory_order_relaxed);
+        }
     }
 };
 
@@ -80,7 +81,6 @@ public:
 
     bool get(const std::string& key, std::string& value) const {
         SkipListNode* current = head_;
-
         for (int i = current_level_ - 1; i >= 0; --i) {
             SkipListNode* next = current->forward[i].load(std::memory_order_acquire);
             while (next && next->key < key) {
@@ -88,7 +88,6 @@ public:
                 next = current->forward[i].load(std::memory_order_acquire);
             }
         }
-
         SkipListNode* next_node = current->forward[0].load(std::memory_order_acquire);
         if (next_node && next_node->key == key) {
             value = next_node->value;
@@ -99,6 +98,22 @@ public:
 
     size_t size_bytes() const {
         return size_bytes_.load(std::memory_order_relaxed);
+    }
+
+    // --- NEW: Lock-Free Iterator for the Flush Thread ---
+    class Iterator {
+    public:
+        Iterator(SkipListNode* start) : current_(start) {}
+        bool is_valid() const { return current_ != nullptr; }
+        void next() { current_ = current_->forward[0].load(std::memory_order_acquire); }
+        std::string key() const { return current_->key; }
+        std::string value() const { return current_->value; }
+    private:
+        SkipListNode* current_;
+    };
+
+    Iterator begin() const {
+        return Iterator(head_->forward[0].load(std::memory_order_acquire));
     }
 
 private:
